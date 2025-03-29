@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import uuid from 'react-native-uuid';
 
 interface Theme {
@@ -35,6 +36,8 @@ interface GlobalContextProps {
   jobs: Job[];
   fetchJobs: () => void;
   loading: boolean;
+  savedJobs: string[];
+  toggleSaveJob: (id: string) => void;
 }
 
 const lightTheme: Theme = {
@@ -63,13 +66,41 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   // Job state and fetching
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  
+  const [savedJobs, setSavedJobs] = useState<string[]>([]);
+
+  const STORAGE_KEY = 'SAVED_JOBS';
+
+  // Load saved jobs from AsyncStorage on mount
+  useEffect(() => {
+    const loadSavedJobs = async () => {
+      try {
+        const savedData = await AsyncStorage.getItem(STORAGE_KEY);
+        if (savedData) {
+          setSavedJobs(JSON.parse(savedData));
+        }
+      } catch (error) {
+        console.error('Error loading saved jobs:', error);
+      }
+    };
+    loadSavedJobs();
+  }, []);
+
+  // Save savedJobs to AsyncStorage whenever it changes
+  useEffect(() => {
+    const storeSavedJobs = async () => {
+      try {
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(savedJobs));
+      } catch (error) {
+        console.error('Error saving saved jobs:', error);
+      }
+    };
+    storeSavedJobs();
+  }, [savedJobs]);
+
   const fetchJobs = async () => {
     try {
       const response = await fetch('https://empllo.com/api/v1');
       const data = await response.json();
-      console.log("Fetched data:", data);
-      // Check if data is an array or if the jobs are in data.jobs
       const jobsArray = Array.isArray(data) ? data : data.jobs;
       if (!jobsArray) {
         throw new Error("No jobs array found in the response");
@@ -100,12 +131,31 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const toggleSaveJob = (id: string) => {
+    setSavedJobs((prevSavedJobs) =>
+      prevSavedJobs.includes(id)
+        ? prevSavedJobs.filter((jobId) => jobId !== id)
+        : [...prevSavedJobs, id]
+    );
+  };
+
   useEffect(() => {
     fetchJobs();
   }, []);
 
   return (
-    <GlobalContext.Provider value={{ isDarkMode, theme, toggleDarkMode, jobs, fetchJobs, loading }}>
+    <GlobalContext.Provider
+      value={{
+        isDarkMode,
+        theme,
+        toggleDarkMode,
+        jobs,
+        fetchJobs,
+        loading,
+        savedJobs,
+        toggleSaveJob,
+      }}
+    >
       {children}
     </GlobalContext.Provider>
   );
