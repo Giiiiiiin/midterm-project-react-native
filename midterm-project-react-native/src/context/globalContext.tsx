@@ -1,5 +1,4 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import uuid from 'react-native-uuid';
 
 interface Theme {
@@ -68,35 +67,6 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [savedJobs, setSavedJobs] = useState<string[]>([]);
 
-  const STORAGE_KEY = 'SAVED_JOBS';
-
-  // Load saved jobs from AsyncStorage on mount
-  useEffect(() => {
-    const loadSavedJobs = async () => {
-      try {
-        const savedData = await AsyncStorage.getItem(STORAGE_KEY);
-        if (savedData) {
-          setSavedJobs(JSON.parse(savedData));
-        }
-      } catch (error) {
-        console.error('Error loading saved jobs:', error);
-      }
-    };
-    loadSavedJobs();
-  }, []);
-
-  // Save savedJobs to AsyncStorage whenever it changes
-  useEffect(() => {
-    const storeSavedJobs = async () => {
-      try {
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(savedJobs));
-      } catch (error) {
-        console.error('Error saving saved jobs:', error);
-      }
-    };
-    storeSavedJobs();
-  }, [savedJobs]);
-
   const fetchJobs = async () => {
     try {
       const response = await fetch('https://empllo.com/api/v1');
@@ -132,10 +102,8 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const toggleSaveJob = (id: string) => {
-    setSavedJobs((prevSavedJobs) =>
-      prevSavedJobs.includes(id)
-        ? prevSavedJobs.filter((jobId) => jobId !== id)
-        : [...prevSavedJobs, id]
+    setSavedJobs(prev =>
+      prev.includes(id) ? prev.filter(jobId => jobId !== id) : [...prev, id]
     );
   };
 
@@ -153,7 +121,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
         fetchJobs,
         loading,
         savedJobs,
-        toggleSaveJob,
+        toggleSaveJob
       }}
     >
       {children}
