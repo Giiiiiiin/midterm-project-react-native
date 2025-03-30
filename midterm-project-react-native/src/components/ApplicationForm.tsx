@@ -90,7 +90,7 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({ job, onClose }) => {
               numberOfLines={4}
             />
             {errors.reason && touched.reason && <Text style={styles.errorText}>{errors.reason}</Text>}
-            <Button title="Submit Application" onPress={handleSubmit as any} />
+            <Button title="Submit Application" color="#f86870" onPress={handleSubmit as any} />
             <View style={{ marginTop: 10 }}>
               <Button title="Cancel" onPress={onClose} color="#ccc" />
             </View>
