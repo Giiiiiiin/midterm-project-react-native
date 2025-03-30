@@ -1,38 +1,36 @@
-// src/screens/JobFinderScreen.tsx
 import React, { useState } from 'react';
 import {
   View,
   FlatList,
   Text,
-  TextInput,
   StyleSheet,
-  Modal,
   Pressable,
-  ScrollView,
   ActivityIndicator,
   RefreshControl,
   useWindowDimensions,
 } from 'react-native';
 import { useGlobalContext } from '../context/globalContext';
 import { useNavigation } from '@react-navigation/native';
-import ApplicationForm from '../components/ApplicationForm';
+import SearchBar from '../components/SearchBar';
+import JobDetailsModal from '../components/JobDetailsModal';
+import ApplicationFormModal from '../components/ApplicationFormModal';
+import JobCard, { Job } from '../components/JobCard';
+
 
 const JobFinderScreen = () => {
   const { jobs, theme, loading, fetchJobs, savedJobs, toggleSaveJob } = useGlobalContext();
   const navigation = useNavigation();
-  const [detailsModalVisible, setDetailsModalVisible] = useState(false); // For job details modal
-  const [appFormVisible, setAppFormVisible] = useState(false); // For application form modal
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [appFormVisible, setAppFormVisible] = useState(false); 
   const [selectedJob, setSelectedJob] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const { width } = useWindowDimensions();
 
-  // Filter jobs based on search query (title or company)
   const filteredJobs = jobs.filter((job) =>
     job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     job.companyName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Opens job details modal
   const openDetailsModal = (job) => {
     setSelectedJob(job);
     setDetailsModalVisible(true);
@@ -43,7 +41,6 @@ const JobFinderScreen = () => {
     setSelectedJob(null);
   };
 
-  // Opens the Application Form modal
   const openApplicationForm = (job) => {
     setSelectedJob(job);
     setAppFormVisible(true);
@@ -65,29 +62,22 @@ const JobFinderScreen = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      {/* Page Title and Subtext */}
       <Text style={[styles.pageTitle, { color: theme.dominant }]}>Home Page</Text>
       <Text style={[styles.pageSubText, { color: theme.text }]}>
         Here, you may find your desired jobs.
       </Text>
 
-      {/* Search Bar */}
-      <TextInput
-        style={[
-          styles.searchBar,
-          {
-            backgroundColor: theme.background,
-            borderColor: theme.accent,
-            color: theme.text,
-          },
-        ]}
-        placeholder="Search jobs..."
-        placeholderTextColor={theme.text}
+      <SearchBar
         value={searchQuery}
         onChangeText={setSearchQuery}
+        placeholder="Search saved jobs..."
+        style={{
+          backgroundColor: theme.background,
+          borderColor: theme.accent,
+          color: theme.text,
+        }}
       />
 
-      {/* Job Listings */}
       <FlatList
         data={filteredJobs}
         keyExtractor={(item) => item.id}
@@ -100,70 +90,23 @@ const JobFinderScreen = () => {
           />
         }
         renderItem={({ item }) => (
-          // Wrap the entire card in a Pressable to open the details modal.
-          <Pressable
-            onPress={() => openDetailsModal(item)}
-            style={({ pressed }) => [
-              {
-                transform: [{ scale: pressed ? 0.97 : 1 }],
-                opacity: pressed ? 0.9 : 1,
-              },
-              styles.card,
-              { backgroundColor: theme.cardBackground },
-            ]}
-          >
-            <Text style={[styles.jobTitle, { color: theme.dominant }]}>{item.title}</Text>
-            <Text style={[styles.jobCompany, { color: theme.text }]}>{item.companyName}</Text>
-            <Text style={[styles.jobSalary, { color: theme.text }]}>
-              Salary: {item.minSalary} - {item.maxSalary}
-            </Text>
-            {/* Buttons Container */}
-            <View style={styles.buttonsContainer}>
-              {/* Save Job Button */}
-              <Pressable
-                onPress={() => toggleSaveJob(item.id)}
-                style={({ pressed }) => {
-                  const isSaved = savedJobs.includes(item.id);
-                  return [
-                    styles.button,
-                    {
-                      backgroundColor: isSaved ? theme.background : theme.accent,
-                      borderWidth: 2,
-                      borderColor: isSaved ? theme.accent : 'transparent',
-                      transform: [{ scale: pressed ? 0.97 : 1 }],
-                      opacity: pressed ? 0.9 : 1,
-                    },
-                  ];
-                }}
-              >
-                <Text style={[styles.buttonText, { color: theme.text }]}>
-                  {savedJobs.includes(item.id) ? 'Saved' : 'Save Job'}
-                </Text>
-              </Pressable>
-              {/* Apply Button */}
-              <Pressable
-                onPress={() => openApplicationForm(item)}
-                style={({ pressed }) => [
-                  styles.button,
-                  {
-                    backgroundColor: theme.accent,
-                    transform: [{ scale: pressed ? 0.97 : 1 }],
-                    opacity: pressed ? 0.9 : 1,
-                  },
-                ]}
-              >
-                <Text style={[styles.buttonText, { color: theme.text }]}>Apply</Text>
-              </Pressable>
-            </View>
-          </Pressable>
+          <JobCard
+            job={item}
+            theme={theme}
+            isSaved={savedJobs.includes(item.id)}
+            onOpenDetails={openDetailsModal}
+            onToggleSave={toggleSaveJob}
+            onOpenApply={openApplicationForm}
+            saveText="Save Job"     
+            savedText="Saved"   
+          />
         )}
         ListEmptyComponent={
-          <Text style={{ color: theme.text }}>No jobs available.</Text>
+          <Text style={{ color: theme.text, textAlign: 'center' }}>No jobs available.</Text>
         }
         contentContainerStyle={styles.listContent}
       />
 
-      {/* Sticky Button to Navigate to SavedJobsScreen */}
       <Text style={[styles.pageTitle, { color: theme.dominant }]}></Text>
       <Pressable
         onPress={() => navigation.navigate('SavedJobs')}
@@ -181,86 +124,18 @@ const JobFinderScreen = () => {
         </Text>
       </Pressable>
 
-      {/* Modal for Job Details */}
-      <Modal
-        visible={detailsModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={closeDetailsModal}
-      >
-        <View style={styles.modalContainer}>
-          <View style={[styles.modalContent, { backgroundColor: theme.cardBackground }]}>
-            <ScrollView contentContainerStyle={styles.modalScrollContent}>
-              {selectedJob && (
-                <>
-                  <Text style={[styles.modalTitle, { color: theme.dominant }]}>
-                    {selectedJob.title}
-                  </Text>
-                  <Text style={[styles.modalText, { color: theme.text }]}>
-                    {selectedJob.description}
-                  </Text>
-                  <Text style={[styles.modalText, { color: theme.text }]}>
-                    Category: {selectedJob.mainCategory}
-                  </Text>
-                  <Text style={[styles.modalText, { color: theme.text }]}>
-                    Job Type: {selectedJob.jobType}
-                  </Text>
-                  <Text style={[styles.modalText, { color: theme.text }]}>
-                    Work Model: {selectedJob.workModel}
-                  </Text>
-                  <Text style={[styles.modalText, { color: theme.text }]}>
-                    Seniority: {selectedJob.seniorityLevel}
-                  </Text>
-                  <Text style={[styles.modalText, { color: theme.text }]}>
-                    Salary: {selectedJob.minSalary} - {selectedJob.maxSalary}
-                  </Text>
-                  <Text style={[styles.modalText, { color: theme.text }]}>
-                    Published: {selectedJob.pubDate}
-                  </Text>
-                  <Text style={[styles.modalText, { color: theme.text }]}>
-                    Expires: {selectedJob.expiryDate}
-                  </Text>
-                  <Text style={[styles.modalText, { color: theme.text }]}>
-                    Application Link: {selectedJob.applicationLink}
-                  </Text>
-                  <Text style={[styles.modalText, { color: theme.text }]}>
-                    Locations: {selectedJob.locations.join(', ')}
-                  </Text>
-                  <Text style={[styles.modalText, { color: theme.text }]}>
-                    Tags: {selectedJob.tags.join(', ')}
-                  </Text>
-                </>
-              )}
-            </ScrollView>
-            <Pressable
-              onPress={closeDetailsModal}
-              style={({ pressed }) => [
-                styles.closeButton,
-                {
-                  transform: [{ scale: pressed ? 0.97 : 1 }],
-                  opacity: pressed ? 0.9 : 1,
-                },
-              ]}
-            >
-              <Text style={[styles.closeButtonText, { color: theme.text }]}>Close</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
+      <JobDetailsModal
+        visible={detailsModalVisible} 
+        job={selectedJob} 
+        onClose={closeDetailsModal} theme={theme}
+      />
 
-      {/* Modal for Application Form */}
-      <Modal
+      <ApplicationFormModal
         visible={appFormVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={closeApplicationForm}
-      >
-        <View style={styles.modalContainer}>
-          <View style={[styles.modalContent, { backgroundColor: theme.cardBackground }]}>
-            <ApplicationForm job={selectedJob} onClose={closeApplicationForm} />
-          </View>
-        </View>
-      </Modal>
+        job={selectedJob}
+        onClose={closeApplicationForm}
+        theme={theme}
+      />
     </View>
   );
 };
@@ -291,7 +166,7 @@ const styles = StyleSheet.create({
   listContent: {
     paddingTop: 16,
     paddingHorizontal: 16,
-    paddingBottom: 150, // Ensure enough space so list items aren't hidden behind sticky buttons
+    paddingBottom: 150, 
   },
   card: {
     padding: 16,
@@ -383,8 +258,23 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 5,
     alignItems: 'center',
+    marginTop: 10,
   },
   closeButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  stickyBackButton: {
+    position: 'absolute',
+    top: 10,
+    left: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 5,
+    alignItems: 'center',
+    zIndex: 2,
+  },
+  stickyBackButtonText: {
     fontSize: 16,
     fontWeight: 'bold',
   },

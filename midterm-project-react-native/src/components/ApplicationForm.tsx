@@ -3,6 +3,7 @@ import React from 'react';
 import { View, TextInput, Button, Alert, StyleSheet, ScrollView, Text } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
+import { useNavigation } from '@react-navigation/native';
 
 interface ApplicationFormProps {
   job?: { title: string };
@@ -26,6 +27,11 @@ const validationSchema = Yup.object().shape({
 });
 
 const ApplicationForm: React.FC<ApplicationFormProps> = ({ job, onClose }) => {
+  const navigation = useNavigation();
+  const state = navigation.getState();
+  const currentRoute = state.routes[state.routes.length - 1].name;
+
+  
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Formik
@@ -39,6 +45,9 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({ job, onClose }) => {
               onPress: () => {
                 resetForm();
                 onClose();
+                if (currentRoute !== 'JobFinder') {
+                  navigation.popToTop();
+                }
               },
             },
           ]);
