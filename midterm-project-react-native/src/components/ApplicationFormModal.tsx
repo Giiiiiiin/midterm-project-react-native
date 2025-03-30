@@ -1,11 +1,10 @@
-// src/components/ApplicationFormModal.tsx
 import React from 'react';
 import { View, Modal, StyleSheet } from 'react-native';
 import ApplicationForm from './ApplicationForm';
 
 interface ApplicationFormModalProps {
   visible: boolean;
-  job: any; // You can replace 'any' with a more specific type if available
+  job: any; 
   onClose: () => void;
   theme: {
     background: string;

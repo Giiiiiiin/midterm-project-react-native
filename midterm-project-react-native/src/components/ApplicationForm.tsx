@@ -1,4 +1,3 @@
-// src/components/ApplicationForm.tsx
 import React from 'react';
 import { View, TextInput, Button, Alert, StyleSheet, ScrollView, Text } from 'react-native';
 import { Formik } from 'formik';
@@ -30,7 +29,6 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({ job, onClose }) => {
   const navigation = useNavigation();
   const state = navigation.getState();
   const currentRoute = state.routes[state.routes.length - 1].name;
-
   
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -38,7 +36,6 @@ const ApplicationForm: React.FC<ApplicationFormProps> = ({ job, onClose }) => {
         initialValues={{ name: '', email: '', contactNumber: '', reason: '' }}
         validationSchema={validationSchema}
         onSubmit={(values, { resetForm }) => {
-          // Process form submission here (e.g., send to an API)
           Alert.alert('Application Submitted', 'Thank you for applying!', [
             {
               text: 'Okay',

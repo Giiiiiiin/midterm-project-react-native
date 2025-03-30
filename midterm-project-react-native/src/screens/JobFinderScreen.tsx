@@ -120,7 +120,7 @@ const JobFinderScreen = () => {
         ]}
       >
         <Text style={[styles.savedJobsButtonText, { color: theme.text }]}>
-          View Saved Jobs
+          View Saved Jobs [{savedJobs.length}]
         </Text>
       </Pressable>
 

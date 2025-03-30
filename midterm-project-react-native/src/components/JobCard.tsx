@@ -1,4 +1,3 @@
-// src/components/JobCard.tsx
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 
@@ -33,11 +32,10 @@ interface JobCardProps {
   onOpenDetails: (job: Job) => void;
   onToggleSave: (id: string) => void;
   onOpenApply: (job: Job) => void;
-  saveText?: string;  // Text when not saved
-  savedText?: string; // Text when saved
+  saveText?: string;  
+  savedText?: string; 
 }
 
-// Helper function to format salary as currency (USD)
 const formatMoney = (value: number): string => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -78,7 +76,7 @@ const JobCard: React.FC<JobCardProps> = ({
         {formatMoney(job.minSalary)} - {formatMoney(job.maxSalary)}
       </Text>
       <View style={styles.buttonsContainer}>
-        {/* Save Job Button */}
+
         <Pressable
           onPress={() => onToggleSave(job.id)}
           style={({ pressed }) => [
@@ -98,7 +96,7 @@ const JobCard: React.FC<JobCardProps> = ({
             </Text>
           )}
         </Pressable>
-        {/* Apply Button */}
+
         <Pressable
           onPress={() => onOpenApply(job)}
           style={({ pressed }) => [

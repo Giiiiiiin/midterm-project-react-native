@@ -1,4 +1,3 @@
-// src/components/JobDetailsModal.tsx
 import React from 'react';
 import { View, Text, StyleSheet, Modal, Pressable, ScrollView, useWindowDimensions } from 'react-native';
 import RenderHTML from 'react-native-render-html';
@@ -16,7 +15,6 @@ interface JobDetailsModalProps {
   };
 }
 
-// Helper function to format numbers as currency
 const formatMoney = (value: number): string => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -28,7 +26,6 @@ const formatMoney = (value: number): string => {
 const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ visible, job, onClose, theme }) => {
   const { width } = useWindowDimensions();
 
-  // Compute badge background based on theme's background color.
   const badgeBackground = theme.background === '#fff' ? '#e0e0e0' : '#333333';
 
   return (
@@ -38,12 +35,10 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ visible, job, onClose
           <ScrollView contentContainerStyle={styles.modalScrollContent}>
             {job && (
               <>
-                {/* Job Title */}
                 <Text style={[styles.modalTitle, { color: theme.dominant, textAlign: 'left' }]}>
                   {job.title}
                 </Text>
 
-                {/* Other Job Details with bold labels */}
                 <Text style={[styles.modalText, { color: theme.text, textAlign: 'left' }]}>
                   <Text style={{ fontWeight: 'bold' }}>Category: </Text>{job.mainCategory}
                 </Text>
@@ -70,7 +65,6 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ visible, job, onClose
                   <Text style={{ fontWeight: 'bold' }}>Application Link: </Text>{job.applicationLink}
                 </Text>
 
-                {/* Locations as badges */}
                 <Text style={[styles.modalText, { color: theme.text, textAlign: 'left' }]}>
                   <Text style={{ fontWeight: 'bold' }}>Locations: </Text>
                 </Text>
@@ -82,7 +76,6 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ visible, job, onClose
                   ))}
                 </View>
 
-                {/* Tags as badges */}
                 <Text style={[styles.modalText, { color: theme.text, textAlign: 'left' }]}>
                   <Text style={{ fontWeight: 'bold' }}>Tags: </Text>
                 </Text>
@@ -94,7 +87,6 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ visible, job, onClose
                   ))}
                 </View>
 
-                {/* Description placed at the very bottom */}
                 <Text style={[styles.modalText, { color: theme.text, textAlign: 'left', marginTop: 16 }]}>
                   <Text style={{ fontWeight: 'bold' }}>Description: </Text>
                 </Text>
