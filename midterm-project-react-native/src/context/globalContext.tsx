@@ -35,6 +35,8 @@ interface GlobalContextProps {
   jobs: Job[];
   fetchJobs: () => void;
   loading: boolean;
+  savedJobs: string[];
+  toggleSaveJob: (id: string) => void;
 }
 
 const lightTheme: Theme = {
@@ -63,13 +65,12 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   // Job state and fetching
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  
+  const [savedJobs, setSavedJobs] = useState<string[]>([]);
+
   const fetchJobs = async () => {
     try {
       const response = await fetch('https://empllo.com/api/v1');
       const data = await response.json();
-      console.log("Fetched data:", data);
-      // Check if data is an array or if the jobs are in data.jobs
       const jobsArray = Array.isArray(data) ? data : data.jobs;
       if (!jobsArray) {
         throw new Error("No jobs array found in the response");
@@ -100,12 +101,29 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const toggleSaveJob = (id: string) => {
+    setSavedJobs(prev =>
+      prev.includes(id) ? prev.filter(jobId => jobId !== id) : [...prev, id]
+    );
+  };
+
   useEffect(() => {
     fetchJobs();
   }, []);
 
   return (
-    <GlobalContext.Provider value={{ isDarkMode, theme, toggleDarkMode, jobs, fetchJobs, loading }}>
+    <GlobalContext.Provider
+      value={{
+        isDarkMode,
+        theme,
+        toggleDarkMode,
+        jobs,
+        fetchJobs,
+        loading,
+        savedJobs,
+        toggleSaveJob
+      }}
+    >
       {children}
     </GlobalContext.Provider>
   );

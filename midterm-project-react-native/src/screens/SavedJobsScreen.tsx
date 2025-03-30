@@ -1,38 +1,119 @@
-
-import React from 'react';
-import { View, FlatList, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, FlatList, Text, TextInput, StyleSheet, Pressable, ActivityIndicator, RefreshControl, Modal, useWindowDimensions } from 'react-native';
 import { useGlobalContext } from '../context/globalContext';
+import { useNavigation } from '@react-navigation/native';
+import JobDetailsModal from '../components/JobDetailsModal';
+import ApplicationFormModal from '../components/ApplicationFormModal';
+import JobCard, { Job } from '../components/JobCard';
 
 const SavedJobsScreen = () => {
-  const { jobs, theme } = useGlobalContext();
+  const { jobs, theme, loading, fetchJobs, savedJobs, toggleSaveJob } = useGlobalContext();
+  const navigation = useNavigation();
+  const { width } = useWindowDimensions();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [appFormVisible, setAppFormVisible] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
+
+  const savedJobsList = jobs.filter((job) => savedJobs.includes(job.id));
+  const filteredSavedJobs = savedJobsList.filter((job) =>
+    job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    job.companyName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const openDetailsModal = (job) => {
+    setSelectedJob(job);
+    setDetailsModalVisible(true);
+  };
+  const closeDetailsModal = () => {
+    setDetailsModalVisible(false);
+    setSelectedJob(null);
+  };
+  const openApplicationForm = (job) => {
+    setSelectedJob(job);
+    setAppFormVisible(true);
+  };
+  const closeApplicationForm = () => {
+    setAppFormVisible(false);
+    setSelectedJob(null);
+  };
+
+  if (loading && jobs.length === 0) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.dominant} />
+        <Text style={[styles.loadingText, { color: theme.text }]}>Loading jobs...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={styles.content}>
-        <Text style={[styles.title, { color: theme.dominant }]}>
-          Saved Jobs
+      <Text style={[styles.pageTitle, { color: theme.dominant }]}>Saved Jobs</Text>
+      <Text style={[styles.pageSubText, { color: theme.text }]}>These are the jobs you've saved.</Text>
+      <TextInput
+        style={[styles.searchBar, { backgroundColor: theme.background, borderColor: theme.accent, color: theme.text }]}
+        placeholder="Search saved jobs..."
+        placeholderTextColor={theme.text}
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
+      <FlatList
+        data={filteredSavedJobs}
+        keyExtractor={(item) => item.id}
+        refreshControl={
+          <RefreshControl 
+            refreshing={loading} 
+            onRefresh={fetchJobs} 
+            colors={[theme.dominant]} 
+            tintColor={theme.dominant} />
+        }
+        renderItem={({ item }) => (
+          <JobCard
+            job={item}
+            theme={theme}
+            isSaved={savedJobs.includes(item.id)}
+            onOpenDetails={openDetailsModal}
+            onToggleSave={toggleSaveJob}
+            onOpenApply={openApplicationForm}
+            saveText="Save Job"     
+            savedText="Remove" 
+          />
+        )}
+        ListEmptyComponent={
+          <Text style={{ color: theme.text, textAlign: 'center' }}>No saved jobs available.</Text>
+        }
+        contentContainerStyle={styles.listContent}
+      />
+
+      <Text style={[styles.pageTitle, { color: theme.dominant }]}></Text>
+      <Pressable
+        onPress={() => navigation.goBack()}
+        style={({ pressed }) => [
+          styles.savedJobsButton,
+          {
+            backgroundColor: theme.accent, 
+            transform: [{ scale: pressed ? 0.97 : 1 }], 
+            opacity: pressed ? 0.9 : 1 },
+        ]}
+      >
+        <Text style={[styles.savedJobsButtonText, { color: theme.text }]}>
+          Back to Job Finder
         </Text>
-        <Text style={[styles.subText, { color: theme.text }]}>
-          Here, you may view your saved jobs.
-        </Text>
-        <FlatList
-          data={jobs}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={[styles.jobCard, { backgroundColor: theme.cardBackground }]}>
-              <Text style={[styles.jobTitle, { color: theme.dominant }]}>{item.title}</Text>
-              <Text style={[styles.jobCompany, { color: theme.text }]}>{item.companyName}</Text>
-              <Text style={[styles.jobSalary, { color: theme.text }]}>
-                Salary: {item.minSalary} - {item.maxSalary}
-              </Text>
-            </View>
-          )}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <Text style={[styles.emptyText, { color: theme.text }]}>No saved jobs available.</Text>
-          }
-        />
-      </View>
+      </Pressable>
+
+      <JobDetailsModal
+        visible={detailsModalVisible} 
+        job={selectedJob} 
+        onClose={closeDetailsModal} theme={theme}
+      />
+
+      <ApplicationFormModal
+        visible={appFormVisible}
+        job={selectedJob}
+        onClose={closeApplicationForm}
+        theme={theme}
+      />
     </View>
   );
 };
@@ -41,30 +122,36 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  title: {
+  pageTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     marginVertical: 16,
     textAlign: 'center',
   },
-  subText: {
+  pageSubText: {
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 20,
   },
-  listContent: {
-    paddingBottom: 80,
+  searchBar: {
+    height: 40,
+    borderWidth: 2,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    marginHorizontal: 16,
+    marginBottom: 10,
   },
-  jobCard: {
+  listContent: {
+    paddingTop: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 150,
+  },
+  card: {
     padding: 16,
     borderRadius: 10,
     marginBottom: 12,
-    elevation: 3, 
-    shadowColor: '#000', 
+    elevation: 3,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -81,10 +168,89 @@ const styles = StyleSheet.create({
   jobSalary: {
     fontSize: 16,
   },
-  emptyText: {
+  buttonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  button: {
+    flex: 0.48,
+    paddingVertical: 8,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  buttonText: {
     fontSize: 16,
-    textAlign: 'center',
-    marginTop: 20,
+    fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stickyBackButton: {
+    position: 'absolute',
+    top: 10,
+    left: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 5,
+    alignItems: 'center',
+    zIndex: 2,
+  },
+  stickyBackButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  savedJobsButton: {
+    position: 'absolute',
+    bottom: 10,
+    left: 16,
+    right: 16,
+    paddingVertical: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  savedJobsButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  modalContent: {
+    width: '90%',
+    maxHeight: '80%',
+    borderRadius: 10,
+    padding: 20,
+  },
+  modalScrollContent: {
+    paddingBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  closeButton: {
+    backgroundColor: '#FF4500',
+    paddingVertical: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  closeButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
